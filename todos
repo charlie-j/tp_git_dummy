@@ -1,0 +1,4 @@
+* Makefile lib
+* add tests
+* map is slower than revmap, optimize
+* ?
