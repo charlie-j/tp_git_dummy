@@ -25,5 +25,6 @@ let m5 = {coeff=Num.Int 1; vars=[78]; size=(2,4); length=1};;
 let p1 = mpoly_add [m1] [m4];;
 let p2 = mpoly_add (mpoly_neg [m4;m1]) [m1];;
 let p3 = mpoly_mul p1 p2;;
+let p4 = mpoly_mul p2 p1;;
 mpoly_mul [m1] [m2;m1];;
 
