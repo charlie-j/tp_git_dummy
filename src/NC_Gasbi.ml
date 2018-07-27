@@ -131,6 +131,8 @@ let rec is_prefix (m1:id_var list) (m2:id_var list) =
 (* Monomial ordering.                                                        *)
 (* ------------------------------------------------------------------------- *)
 
+exception BadOrder;;
+
 let morder_lt m1 m2 =
    m1.length < m2.length || (m1.length = m2.length &&  lexord_lt(<) m1.vars m2.vars);;
 
@@ -138,11 +140,21 @@ let morder_lt m1 m2 =
 (* Arithmetic on canonical multivariate polynomials.                         *)
 (* ------------------------------------------------------------------------- *)
 
+let rec mpoly_checkord (pol:pol):bool = 
+  match pol with
+  | [] -> true
+  | [a] -> true
+  | p::q::t -> (morder_lt q p) && mpoly_checkord (q::t)
+
 let mpoly_cmul c (pol:pol) :pol =
   if c = Int 0 then []
   else map (fun m -> {m with coeff=c*/m.coeff}) pol;;
 
-let mpoly_mmul cm (pol:pol) :pol = map (mmul cm) pol;;
+let mpoly_mmul cm (pol:pol) :pol = 
+  if not(mpoly_checkord pol) then
+      raise BadOrder
+  else
+       map (mmul cm) pol;;
 
 let mpoly_neg (pol) :pol = map (fun m -> {m with coeff=minus_num m.coeff}) pol ;;
 
