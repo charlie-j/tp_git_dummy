@@ -1,6 +1,4 @@
 (* Grobner basis computations for K[X]-module *)
-#use "topfind";;
-#require "num";;
  (* Imports and abbreviations *)
 
     

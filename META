@@ -1,0 +1,6 @@
+name="libdummy"
+description=""
+version="0.1"
+requires="num"
+archive(byte)="libdummy.cma"
+archive(native)="libdummy.cmxa"
