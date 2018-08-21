@@ -22,6 +22,8 @@ let m3 = {coeff=Num.Int 1; vars=[27;27;78]; size=(2,4); length=3};;
 let m4 = {coeff=Num.Int 1; vars=[27;27]; size=(2,2); length=2};;
 let m5 = {coeff=Num.Int 1; vars=[78]; size=(2,4); length=1};;
 
+let lb =  [[m2];[m2;m]];;
+
 let p1 = mpoly_add [m1] [m4];;
 let p2 = mpoly_add (mpoly_neg p1) [m1];;
 let p3 = mpoly_mul p1 (mpoly_neg p1);;
@@ -37,6 +39,12 @@ let base2 =  DBase.from_list [[m3];[m5]];;
 
 monom_critical_pairs [1;1] base;;
 monom_critical_pairs [1;1] base2;;
+
+inverter [m1] lb;;
+inverter [m2] lb;;
+inverter [m3] lb;;
+inverter [m4] lb;;
+
 
 
 
