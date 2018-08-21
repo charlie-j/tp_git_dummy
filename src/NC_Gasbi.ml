@@ -366,3 +366,18 @@ let rec monom_critical_pairs (m:vars) (polys:DBase.t) : (pol list * pol list) li
 
 
 
+
+(* ------------------------------------------------------------------------- *)
+(* Computation of the S polynoms.                                            *)
+(* ------------------------------------------------------------------------- *)
+
+
+let new_Spolys (p:pol)  (polys:DBase.t) : pol list =
+  match (get_hd p) with
+  |None -> []
+  |Some mon ->
+    let pairs = monom_critical_pairs mon.vars polys in 
+    List.map (fun (ps1,ps2) -> s_poly (mpoly_muls ps1) (mpoly_muls (p::ps2)) ) pairs;;
+   
+
+
