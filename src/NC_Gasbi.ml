@@ -419,3 +419,97 @@ let rec reduce (p:pol) (polys:DBase.t)=
 
 
 
+(* ------------------------------------------------------------------------- *)
+(* Is a polynom deducible ?                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+let deduce (p:pol) (polys:pol list)=
+  let rec aux (p:pol) (base:DBase.t) (acc:pol list) =
+    let reduces = reduce p base in
+    if (List.exists is_null reduces) then
+      true          (* if the polynom reduces to 0, we have a base *)
+    else
+      (
+        match acc with
+        |[] -> false   (* if we already considered all the possible critical pairs, it is over *)
+        |[]::accs -> aux p base accs
+        |pol::accs ->
+          let s_polys = new_Spolys pol base in
+          (* for each s_polys, we compute its different reductions, and if they are not null
+             we add them to the base and to the accumulators *)
+          let new_acc = List.fold_right
+                          (fun s_poly acc ->
+                              let reduces = reduce s_poly base in
+                              let res = ref acc in
+                              List.iter (fun reduced ->
+                                  if not(is_null reduced) then
+                                    DBase.add base reduced;
+                                    res := reduced::!res    
+                                ) reduces;
+                                !res
+                              
+                          ) s_polys [] in
+          aux p base (accs @ new_acc)
+      ) in
+  aux p (DBase.from_list polys) polys;;
+    
+
+
+ let rec aux_get_inv (p:pol) (base:DBase.t) (acc:pol list) =
+   let reduces = reduce p base in
+   let rec get_null (reduced:pol list) =
+     match reduced with
+     |[] -> None
+     |p::q -> if is_null p then Some (p) else get_null q
+   in
+   match (get_null reduces) with
+   | Some (p) -> p
+   | None ->
+      (
+        match acc with
+        |[] -> failwith "No inverter found"   (* if we already considered all the possible critical pairs, it is over *)
+        |[]::accs -> aux_get_inv p base accs
+        |pol::accs ->
+          let s_polys = new_Spolys pol base in
+          (* for each s_polys, we compute its different reductions, and if they are not null
+             we add them to the base and to the accumulators *)
+          let new_acc = List.fold_right
+                          (fun s_poly acc ->
+                            let reduces = reduce s_poly base in
+                            let res = ref acc in
+                            List.iter (fun reduced ->
+                                if not(is_null reduced) then
+                                  DBase.add base reduced;
+                                res := reduced::!res    
+                              ) reduces;
+                            !res
+                             
+                          ) s_polys [] in
+          aux_get_inv p base (accs @ new_acc)
+      );;
+
+
+let sort_poly : pol -> pol = fun p ->
+        sort (fun m1 m2 -> 
+        match (morder_lt m1 m2, morder_lt m2 m1) with
+        | (false, true) -> -1
+        | (true, false) -> 1
+        | (false, false) -> 0
+        | (true, true) -> failwith "unreach"
+        ) p
+
+
+let sort_polys : pol list -> pol list =
+    map sort_poly
+
+let inverter (p:pol) (polys:pol list)=
+  let acc = ref 0 in
+  let polys = List.map (fun pol ->
+                  acc := !acc - 1;
+                pol@[{coeff=Num.Int 1; vars=[!acc]; size=(-1,-1);length=0}])
+  (sort_polys polys)
+  in
+  let inv = aux_get_inv (sort_poly p) (DBase.from_list polys) polys in
+  mpoly_cmul (Int (-1)) inv;;
+
+
