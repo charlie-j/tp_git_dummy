@@ -28,3 +28,9 @@ let p3 = mpoly_mul p1 (mpoly_neg p1);;
 let p4 = mpoly_mul p2 p1;;
 mpoly_mul [m1] [m2;m1];;
 
+let base = DBase.from_list [[m1];[m2];[m2;m1];[m4];[m5]];;
+DBase.get_all_prefix_lt base [1;2] ;;
+
+get_all_products [1;2]   (DBase.from_list [[m1];[m2];[m2;m1];[m4];[m5]]);;
+
+

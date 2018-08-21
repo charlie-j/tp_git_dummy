@@ -212,3 +212,117 @@ let s_poly (p1:pol) (p2:pol) =
                     |_, Int 0 -> p1
                     |c1,c2 -> mpoly_sub p1 (mpoly_cmul (c1//c2) p2);;
 
+(* a generic structure for handling NC groebner basis *)
+
+module DBase : sig 
+ type t = 
+    { mutable t_pols : pol list;
+      mutable t_allp : (pol*vars) list;
+              t_sons : (id_var, t) Hashtbl.t }
+
+  val create : unit -> t
+  val add : t -> pol -> unit
+  val mem : t -> pol -> bool
+  val get_all_prefix_lt : t -> vars -> (pol list * vars) list
+  val get_all_prefix_gt : t -> vars -> (pol*vars) list
+  val from_list : pol list -> t
+  val get_vson : t -> id_var -> t option
+end = struct 
+
+  type t = 
+    { mutable t_pols : pol list;
+      mutable t_allp : (pol*vars) list;
+              t_sons : (id_var, t) Hashtbl.t }
+
+  let create () = 
+    { t_pols = [];
+      t_allp = [];
+      t_sons = Hashtbl.create 17; }
+
+  let get_vson t v =
+    try Some (Hashtbl.find t.t_sons v)
+    with Not_found -> None 
+
+  let getupd_vson t v =
+    try Hashtbl.find t.t_sons v 
+    with Not_found ->
+      let t' = create () in
+      Hashtbl.add t.t_sons v t';
+      t'
+    
+  let add t p = 
+    match p with
+    | [] -> ()
+    | m::_ ->
+      let rec aux t vs = 
+        t.t_allp <- (p,vs) :: t.t_allp;
+        match vs with
+        | []      -> t.t_pols <- p :: t.t_pols
+        | v :: vs -> aux (getupd_vson t v) vs in
+      aux t m.vars
+                 
+  let get_all_prefix_lt =
+    let rec aux ps t vs = 
+      match vs with 
+      | [] -> ps 
+      | v:: vs ->
+        match get_vson t v with 
+        | None -> ps
+        | Some t -> 
+          let ps = (t.t_pols,vs) :: ps in
+          aux ps t vs in
+    aux []
+
+   let mem t p =
+    let rec aux t vs = 
+      match vs with 
+      | [] -> List.mem p t.t_pols
+      | v::vs ->
+        match get_vson t v with 
+        | None -> false
+        | Some t -> aux t vs in
+    match p with
+    |[] -> List.mem p t.t_pols
+    |mon::_ -> aux t mon.vars
+
+  let rec get_all_prefix_gt t vs =
+    match vs with 
+    | [] -> t.t_allp
+    | v:: vs ->
+      match get_vson t v with 
+      | None -> []
+      | Some t -> get_all_prefix_gt t vs 
+
+  let from_list (polys:pol list)=
+    let t = create () in
+    List.iter (add t) polys;
+    t
+
+end
+
+
+(* ------------------------------------------------------------------------- *)
+(* Reduction of a monom with respect to a base.                            *)
+(* ------------------------------------------------------------------------- *)
+
+let rec get_all_products (m:vars) (polys:DBase.t) : pol list list =
+  let rec sub_sol (m:vars) (pol_prefs: (pol list * vars) list) =
+    match pol_prefs with
+    | [] -> []
+    | (ps,r)::q -> 
+       if r = [] then 
+         List.map (fun p -> [p]) ps @ (sub_sol m q) 
+       else 
+         let subsols = get_all_products r polys in
+         let sols =
+           List.map (fun pol -> 
+               List.map (fun a -> pol::a) subsols) ps
+         in
+         let sols = List.flatten sols in
+         sols@(sub_sol m q)
+  in
+  sub_sol m (DBase.get_all_prefix_lt polys m);;
+
+
+
+
