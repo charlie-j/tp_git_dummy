@@ -33,4 +33,10 @@ DBase.get_all_prefix_lt base [1;2] ;;
 
 get_all_products [1;2]   (DBase.from_list [[m1];[m2];[m2;m1];[m4];[m5]]);;
 
+let base2 =  DBase.from_list [[m3];[m5]];;
+
+monom_critical_pairs [1;1] base;;
+monom_critical_pairs [1;1] base2;;
+
+
 

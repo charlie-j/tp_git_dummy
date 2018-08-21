@@ -14,6 +14,7 @@ let rec itlist f l b =
     [] -> b
   | (h::t) -> f h (itlist f t b);;
 
+(* the lexicographic ordering *)
 let rec lexord_lt ord l1 l2 =
   match (l1,l2) with
     ([],[]) -> false
@@ -36,8 +37,10 @@ let rec distinctpairs l =
 (* Defining polynomial types                                                 *)
 (* ------------------------------------------------------------------------- *)
 
+(* variables are identified wit int*)
 type id_var = int;;
 
+(* each variable is a polynom with some abstract length, we define the type of size *)
 type id_size = int;;
 
 type vars = id_var list;;
@@ -71,6 +74,7 @@ let get_hd (p:pol) =
   else
     Some (List.hd p)
 
+(* check the equality of two polynoms *)
 let rec equals (p1:pol) (p2:pol) =
   match (get_hd p1,get_hd p2) with
        |None,None -> true
@@ -323,6 +327,41 @@ let rec get_all_products (m:vars) (polys:DBase.t) : pol list list =
   in
   sub_sol m (DBase.get_all_prefix_lt polys m);;
 
+
+
+(* ------------------------------------------------------------------------- *)
+(* Computation of critical pairs.                                            *)
+(* ------------------------------------------------------------------------- *)
+
+
+let rec monom_critical_pairs (m:vars) (polys:DBase.t) : (pol list * pol list) list =
+  let products = get_all_products m polys in
+  if products <> [] then
+    List.map (fun l -> (l,[])) products
+  else
+    let rec sub_sol (pref: (pol list * vars) list) (suf: (pol * vars) list) =
+      match pref,suf with
+      |[],[] -> [([],[])]
+      |[],(ss,r)::q -> let subsols = monom_critical_pairs r polys in
+                        let sols =
+                              List.map (fun (l1,l2)-> ss::l2,l1) subsols
+                        in
+                        if sols != [] then
+                          sols
+                        else
+                          sub_sol pref q
+      |(ps,r)::q,sufs -> let subsols = monom_critical_pairs r polys in
+                        let sols =
+                          List.map (fun pol ->
+                              List.map (fun (l1,l2)-> pol::l1,l2) subsols) ps
+                        in
+                        if sols != [] then
+                          List.flatten sols
+                        else
+                          sub_sol q sufs
+    in
+    let sols = sub_sol (DBase.get_all_prefix_lt polys m) ((DBase.get_all_prefix_gt polys m)) in
+    sols;;
 
 
 
