@@ -159,7 +159,8 @@ let mpoly_mmul cm (pol:pol) :pol =
   else
        map (mmul cm) pol;;
 
-let mpoly_neg (pol) :pol = map (fun m -> {m with coeff=minus_num m.coeff}) pol ;;
+(* tail recursive negation *)
+let mpoly_neg (pol) :pol = rev_map (fun m -> {m with coeff=minus_num m.coeff}) pol ;;
 
 let rec remove_null_mon (p:pol) =
   match p with
