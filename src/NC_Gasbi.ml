@@ -381,3 +381,41 @@ let new_Spolys (p:pol)  (polys:DBase.t) : pol list =
    
 
 
+(* ------------------------------------------------------------------------- *)
+(* Computation of the S polynoms.                                            *)
+(* ------------------------------------------------------------------------- *)
+
+(* return all the possible one step reductions of a polynom wrt a base *)
+let reduce_1 (p:pol) (polys:DBase.t) =
+  match (get_hd p) with
+  | None -> []
+  | Some m -> 
+    let prods = get_all_products m.vars polys in
+    if prods = [] then
+      [p]
+    else
+      (
+      let prods = List.map mpoly_muls prods in
+      let sub_prod prod = 
+        match (get_hd prod) with
+        | None    -> p 
+        | Some m1 -> mpoly_sub p (mpoly_cmul (m.coeff//m1.coeff) prod) in
+      List.map sub_prod prods
+      );;
+
+              
+(* compute all the possible reductions of p wrt polys *)
+let rec reduce (p:pol) (polys:DBase.t)=
+  if DBase.mem polys p then
+    [[]]
+  else
+    let reduced_1 = reduce_1 p polys in
+    match reduced_1 with
+    |[] -> [p]
+    |[q] -> if equals p q then [p]
+            else
+              List.flatten (List.map (fun p -> reduce p polys) reduced_1)
+    |_ ->  List.flatten (List.map (fun p -> reduce p polys) reduced_1);;
+
+
+
