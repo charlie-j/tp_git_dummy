@@ -51,7 +51,6 @@ type mon =
 
 type pol = mon list;;
 
-(* type pol_i = mon list * Expr.expr; *)
 
 type i_var_set = int list;;
 
@@ -204,14 +203,6 @@ let mpoly_muls ps =
   | p :: ps -> 
      List.fold_left (fun p acc -> mpoly_mul p acc ) p ps;;
 
-
-mpoly_muls  [[{coeff = Int 1; vars = [1]; length = 1; size = (2, 2)};
-    {coeff = Int (-1); vars = [-1]; length = 0; size = (-1, -1)};
-    {coeff = Int 1; vars = [-2]; length = 0; size = (-1, -1)}];
-   [{coeff = Int 1; vars = [1]; length = 1; size = (2, 2)};
-    {coeff = Int (-1); vars = [-1]; length = 0; size = (-1, -1)};
-    {coeff = Int 1; vars = [-2]; length = 0; size = (-1, -1)}]];;
-
 let s_poly (p1:pol) (p2:pol) =
   match (p1,p2) with
   |_,[] -> p1
@@ -220,45 +211,4 @@ let s_poly (p1:pol) (p2:pol) =
                     |Int 0,_ -> p2
                     |_, Int 0 -> p1
                     |c1,c2 -> mpoly_sub p1 (mpoly_cmul (c1//c2) p2);;
-(* Exemples *)
-(*
-let m1 = {coeff=Num.Int 1; vars=[27]; size=(2,2); length=1};;
-let m2 = {coeff=Num.Int 1; vars=[27;78]; size=(2,4); length=2};;
-let m3 = {coeff=Num.Int 1; vars=[27;27;78]; size=(2,4); length=3};;
-let m4 = {coeff=Num.Int 1; vars=[27;27]; size=(2,2); length=2};;
-let m5 = {coeff=Num.Int 1; vars=[78]; size=(2,4); length=1};;
-
-let p1 = mpoly_add [m1] [m2];;
-mpoly_mul [m1] [m2;m1];;
-
-let base = DBase.from_list [[m1];[m2];[m2;m1];[m4];[m5]];;
-DBase.get_all_prefix_lt base [1;2] ;;
-
-get_all_products [1;2]   (DBase.from_list [[m1];[m2];[m2;m1];[m4];[m5]]);;
-
-let base2 =  DBase.from_list [[m3];[m5]];;
-
-monom_critical_pairs [1;1] base;;
-monom_critical_pairs [1;1] base2;;
-
-reduce_1 [m3] (DBase.from_list [[m2;m4];[m5;m3]]);;
-reduce [m3;m1] (DBase.from_list [[m4;m1];[m5];[m2;m1];[m1]]);;
-
-
-let lb =  [[m2];[m2;m1]];;
-get_all_products m1.vars (DBase.from_list lb);;
-reduce_1 [m1] (DBase.from_list lb);;
-deduce [m1] lb;;
-deduce [m2] lb;;
-deduce [m3] lb;;
-deduce [m4] lb;;
-deduce [m5] lb;;
-inverter [m1] lb;;
-inverter [m2] lb;;
-inverter [m3] lb;;
-inverter [m4] lb;;
-(*inverter [m5] lb;;*)
-
-*)
-
 
